@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:google-ad-manager="http://www.mulesoft.org/schema/mule/google-ad-manager" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/google-ad-manager http://www.mulesoft.org/schema/mule/google-ad-manager/current/mule-google-ad-manager.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="809c3b52-c265-413b-95e1-60b5de4863bb" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="covid" doc:id="f564c8e6-209b-4c89-864a-b5b7e5c78d87" >
+		<http:request method="GET" doc:name="corona-api." doc:id="cd34da10-9ac1-4a2c-a5f9-84b2c084b05b" url="https://corona-api.com/countries" target="corona">
+			<reconnect-forever />
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="154a4c5a-78e6-401a-8a8f-8635bb371277" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="covid" ><![CDATA[%dw 2.0
+output application/json
+
+var p =vars.corona.data.population filter ((item, index) -> item != null)
+var q = max(p)
+
+var w = p filter ((item, index) -> item != q)
+var e= max(w)
+var r = w filter ((item, index) -> item != e)
+var t = max(r)
+var max3= [q,e,t]
+
+var b = vars.corona.data map ((value, index) -> 
+ value mapObject ((value, key, index) -> (key):value))
+   filter ((item, index) -> item.population==max3[0] or item.population== max3[1] or item.population==max3[2])
+var a = b map ((value, index) -> 
+ value mapObject ((value, key, index) -> (key):value))
+ var k = a map ((item, index) -> item filterObject ((value, key, index) -> (
+	key as String != "coordinates" and key as String !="name" 
+	and key as String !="code" and key as String !="updated_at" 
+	and key as String !="today"
+) ))
+var j = k.latest_data map (obj,indexOfObj) ->
+obj filterObject ((value, key, index) -> (key as String != "calculated"))
+var l = k map ((item, index) -> item filterObject ((value, key, index) -> (
+	key as String != "latest_data"))) 
+var o = [l[0] ++ j[0]] + (l[1] ++ j[1]) + (l[2] ++ j[2]) 
+---
+
+o]]></ee:set-variable>
+				<ee:set-variable variableName="covid1" ><![CDATA[%dw 2.0
+output application/json
+
+var p =vars.corona.data.population filter ((item, index) -> item != null)
+var q = max(p)
+
+var w = p filter ((item, index) -> item != q)
+var e= max(w)
+var r = w filter ((item, index) -> item != e)
+var t = max(r)
+var max3= [q,e,t]
+
+
+---
+
+max3 ]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="9009bca6-f6bb-4418-96fd-5652c2b318fd" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="weather" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.corona.data filter ((item, index) -> item.population == vars.covid1[0] or item.population == vars.covid1[1] or item.population == vars.covid1[2])]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="e64ce0a7-0c2c-47c9-a647-9ec6566985ed">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="latt1"><![CDATA[%dw 2.0
+output application/json
+---
+vars.weather.coordinates.latitude[0]]]></ee:set-variable>
+				<ee:set-variable variableName="latt2"><![CDATA[%dw 2.0
+output application/json
+---
+vars.weather.coordinates.latitude[1]]]></ee:set-variable>
+				<ee:set-variable variableName="latt3"><![CDATA[%dw 2.0
+output application/json
+---
+vars.weather.coordinates.latitude[2]]]></ee:set-variable>
+				<ee:set-variable variableName="long1"><![CDATA[%dw 2.0
+output application/json
+---
+vars.weather.coordinates.longitude[0]]]></ee:set-variable>
+				<ee:set-variable variableName="long2"><![CDATA[%dw 2.0
+output application/json
+---
+vars.weather.coordinates.longitude[1]]]></ee:set-variable>
+				<ee:set-variable variableName="long3"><![CDATA[%dw 2.0
+output application/json
+---
+vars.weather.coordinates.longitude[2]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="6afa7081-ca33-4c7d-b0d0-b443fcdb55ab">
+			<route>
+				<http:request method="GET" doc:name="weather1" doc:id="8f580d04-25d2-4c6e-8297-92722ac74619" url="https://api.openweathermap.org/data/2.5/onecall">
+					<reconnect-forever />
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	appid : "fd632801f134ba675a77535236f9ea57",
+	cnt : 7,
+	lon : vars.long1,
+	lat : vars.latt1
+}]]]></http:query-params>
+				</http:request>
+			</route>
+			<route>
+				<http:request method="GET" doc:name="weather2" doc:id="14401bcf-6ac6-460f-bd71-fbae5ef01b35" url="https://api.openweathermap.org/data/2.5/onecall">
+					<reconnect />
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	appid : "fd632801f134ba675a77535236f9ea57",
+	cnt : 7,
+	lon : vars.long2,
+	lat : vars.latt2
+}]]]></http:query-params>
+				</http:request>
+			</route>
+			<route>
+				<http:request method="GET" doc:name="weather3" doc:id="e7e43cd1-8e5c-4562-aae1-866a0d681488" url="https://api.openweathermap.org/data/2.5/onecall">
+					<reconnect-forever />
+					<http:query-params><![CDATA[#[output application/java
+---
+{
+	appid : "fd632801f134ba675a77535236f9ea57",
+	cnt : 7,
+	lon : vars.long3,
+	lat : vars.latt3
+}]]]></http:query-params>
+				</http:request>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="d3223e83-f935-4a46-a808-464d34420845">
+			<ee:message>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="weather2" ><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload..payload)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<http:request method="GET" doc:name="countries" doc:id="8a9df58a-8b3e-4c76-9cbe-88b87a2ca4ff" url="https://api.first.org/data/v1/countries" target="country11">
+			<reconnect-forever />
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="2deaee4f-2359-477d-b780-aa3e2887d0a6" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="code1" ><![CDATA[%dw 2.0
+output application/json
+var p = vars.country11.data filterObject ((value, key, index) -> (key as String == vars.weather.code[0] or key as String == vars.weather.code[1] or key as String == vars.weather.code[2])) 
+var filtered = vars.country11  filterObject ((value, key, index) -> (key as String != "data"))
+var filtered1 = filtered ++ "data": p
+---
+(filtered1.data  pluck ((value, key, index) ->  key))[0]]]></ee:set-variable>
+				<ee:set-variable variableName="code2" ><![CDATA[%dw 2.0
+output application/json
+var p = vars.country11.data filterObject ((value, key, index) -> (key as String == vars.weather.code[0] or key as String == vars.weather.code[1] or key as String == vars.weather.code[2])) 
+var filtered = vars.country11  filterObject ((value, key, index) -> (key as String != "data"))
+var filtered1 = filtered ++ "data": p
+---
+(filtered1.data  pluck ((value, key, index) ->  key))[1]]]></ee:set-variable>
+				<ee:set-variable variableName="code3" ><![CDATA[%dw 2.0
+output application/json
+var p = vars.country11.data filterObject ((value, key, index) -> (key as String == vars.weather.code[0] or key as String == vars.weather.code[1] or key as String == vars.weather.code[2])) 
+var filtered = vars.country11  filterObject ((value, key, index) -> (key as String != "data"))
+var filtered1 = filtered ++ "data": p
+---
+(filtered1.data  pluck ((value, key, index) ->  key))[2]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="6a68ba79-e67c-4d4f-8912-70f646965f28">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="country1"><![CDATA[%dw 2.0
+output application/json
+var p = vars.country11.data filterObject ((value, key, index) -> (key as String == vars.weather.code[0])) 
+var filtered = vars.country11  filterObject ((value, key, index) -> (key as String != "data"))
+---
+filtered ++ "data": p]]></ee:set-variable>
+				<ee:set-variable variableName="country2"><![CDATA[%dw 2.0
+output application/json
+var p = vars.country11.data filterObject ((value, key, index) -> (key as String == vars.weather.code[1])) 
+var filtered = vars.country11  filterObject ((value, key, index) -> (key as String != "data"))
+---
+filtered ++ "data": p]]></ee:set-variable>
+				<ee:set-variable variableName="country3"><![CDATA[%dw 2.0
+output application/json
+var p = vars.country11.data filterObject ((value, key, index) -> (key as String == vars.weather.code[2])) 
+var filtered = vars.country11  filterObject ((value, key, index) -> (key as String != "data"))
+---
+filtered ++ "data": p]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<file:read doc:name="Read" doc:id="cd01fe67-582c-49ba-aecd-420cfa4f0c1a" path="C:\Users\UMI\Documents\myfile\Countrycode(All).csv" />
+		<ee:transform doc:name="Transform Message" doc:id="da80777c-8e0e-4b48-8b64-52c9acec1411" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="07f6dc7a-df8f-409a-b6d8-90bc4997a61a">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="exchangeRate"><![CDATA[%dw 2.0
+output application/json
+var p = payload filter ((item, index) ->item.CountryCode == vars.code1 or item.CountryCode == vars.code2 or (item.CountryCode == vars.code3 default "US"))
+---
+p.Code]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<http:request method="GET" doc:name="exchange" doc:id="a42bf444-77d7-4dea-9ff4-dd45438dd5eb" url="https://v6.exchangerate-api.com/v6/84e3718f9f57dafa347efee8/latest/USD" >
+			<reconnect-forever />
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="315abee0-e1fc-49d1-8b90-72736d79f5b1">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="Exchange2"><![CDATA[%dw 2.0
+output application/json
+var p = payload filterObject ((value, key, index) -> (key as String != "conversion_rates"))
+var f = payload.conversion_rates  filterObject ((value, key, index) -> (key as String == vars.exchangeRate[1]))
+---
+p ++ "conversion_rates": f]]></ee:set-variable>
+				<ee:set-variable variableName="Exchange1"><![CDATA[%dw 2.0
+output application/json
+var p = payload filterObject ((value, key, index) -> (key as String != "conversion_rates"))
+var f = payload.conversion_rates  filterObject ((value, key, index) -> (key as String == vars.exchangeRate[0]))
+---
+p ++ "conversion_rates": f]]></ee:set-variable>
+				<ee:set-variable variableName="Exchange3" ><![CDATA[%dw 2.0
+output application/json
+var p = payload filterObject ((value, key, index) -> (key as String != "conversion_rates"))
+var f = payload.conversion_rates  filterObject ((value, key, index) -> (key as String == vars.exchangeRate[2]))
+---
+p ++ "conversion_rates": f]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+	<flow name="pro1Flow" doc:id="4db09de6-9f66-46e6-ad98-f0adad0a0854" >
+		<http:listener doc:name="Listener" doc:id="b357253d-827e-4b2e-b12d-f41e5fb93d61" config-ref="HTTP_Listener_config" path="/w" />
+		<flow-ref doc:name="Flow Reference" doc:id="36f31ef2-2932-4943-9da7-a1378642e841" name="covid"/>
+		<ee:transform doc:name="Transform Message" doc:id="b9241e8d-a458-46cc-af29-1e4838804295" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+   [
+    {
+    covidTracking1: vars.covid[0],
+	weather1: vars.weather2[0],
+	country1: vars.country1,
+	exchange1: vars.Exchange2
+	},
+	{
+    covidTracking2: vars.covid[1],
+	weather2: vars.weather2[1],
+	country2: vars.country2,
+	exchange2: vars.Exchange1
+	},
+	{
+    covidTracking3: vars.covid[2],
+	weather3: vars.weather2[2],
+	country3: vars.country3,
+	exchange3: vars.Exchange3
+	}
+	
+	]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="pro1Flow1" doc:id="abbc6576-0c5f-42b7-87db-20955031f87a" >
+		<http:listener doc:name="Listener" doc:id="dca8ca42-7935-4fe0-b6d3-82fe61fbd9bc" config-ref="HTTP_Listener_config" path="/m"/>
+		<file:read doc:name="Read" doc:id="c2fa83d9-7b1b-4edf-80f7-3b51427e5684" path="C:\Users\UMI\Documents\myfile\Countrycode(All).csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="1e5f98e4-717d-4160-a676-48ec600c48f9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
