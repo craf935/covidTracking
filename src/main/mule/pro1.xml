@@ -116,6 +116,7 @@ vars.weather.coordinates.longitude[2]]]></ee:set-variable>
 	appid : "fd632801f134ba675a77535236f9ea57",
 	cnt : 7,
 	lon : vars.long1,
+	exclude : "hourly,daily,minutely,alerts",
 	lat : vars.latt1
 }]]]></http:query-params>
 				</http:request>
@@ -129,6 +130,7 @@ vars.weather.coordinates.longitude[2]]]></ee:set-variable>
 	appid : "fd632801f134ba675a77535236f9ea57",
 	cnt : 7,
 	lon : vars.long2,
+	exclude : "hourly,daily,minutely,alerts",
 	lat : vars.latt2
 }]]]></http:query-params>
 				</http:request>
@@ -142,6 +144,7 @@ vars.weather.coordinates.longitude[2]]]></ee:set-variable>
 	appid : "fd632801f134ba675a77535236f9ea57",
 	cnt : 7,
 	lon : vars.long3,
+	exclude : "hourly,daily,minutely,alerts",
 	lat : vars.latt3
 }]]]></http:query-params>
 				</http:request>
