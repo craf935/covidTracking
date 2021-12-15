@@ -21,7 +21,7 @@ http://www.mulesoft.org/schema/mule/google-ad-manager http://www.mulesoft.org/sc
 				<ee:set-variable variableName="covid" ><![CDATA[%dw 2.0
 output application/json
 
-var p =vars.corona.data.population filter ((item, index) -> item != null)
+var p =vars.corona.data.latest_data.deaths filter ((item, index) -> item != null)
 var q = max(p)
 
 var w = p filter ((item, index) -> item != q)
@@ -32,7 +32,7 @@ var max3= [q,e,t]
 
 var b = vars.corona.data map ((value, index) -> 
  value mapObject ((value, key, index) -> (key):value))
-   filter ((item, index) -> item.population==max3[0] or item.population== max3[1] or item.population==max3[2])
+   filter ((item, index) -> item.latest_data.deaths==max3[0] or item.latest_data.deaths== max3[1] or item.latest_data.deaths==max3[2])
 var a = b map ((value, index) -> 
  value mapObject ((value, key, index) -> (key):value))
  var k = a map ((item, index) -> item filterObject ((value, key, index) -> (
@@ -44,14 +44,14 @@ var j = k.latest_data map (obj,indexOfObj) ->
 obj filterObject ((value, key, index) -> (key as String != "calculated"))
 var l = k map ((item, index) -> item filterObject ((value, key, index) -> (
 	key as String != "latest_data"))) 
-var o = [l[0] ++ j[0]] + (l[1] ++ j[1]) + (l[2] ++ j[2]) 
+var o = [l[0] ++ j[0]] + (l[1] ++ j[1]) + (l[1] ++ j[1]) 
 ---
 
 o]]></ee:set-variable>
 				<ee:set-variable variableName="covid1" ><![CDATA[%dw 2.0
 output application/json
 
-var p =vars.corona.data.population filter ((item, index) -> item != null)
+var p =vars.corona.data.latest_data.deaths filter ((item, index) -> item != null)
 var q = max(p)
 
 var w = p filter ((item, index) -> item != q)
@@ -63,7 +63,7 @@ var max3= [q,e,t]
 
 ---
 
-max3 ]]></ee:set-variable>
+max3]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<ee:transform doc:name="Transform Message" doc:id="9009bca6-f6bb-4418-96fd-5652c2b318fd" >
@@ -73,7 +73,7 @@ max3 ]]></ee:set-variable>
 				<ee:set-variable variableName="weather" ><![CDATA[%dw 2.0
 output application/json
 ---
-vars.corona.data filter ((item, index) -> item.population == vars.covid1[0] or item.population == vars.covid1[1] or item.population == vars.covid1[2])]]></ee:set-variable>
+vars.corona.data filter ((item, index) -> item.latest_data.deaths == vars.covid1[0] or item.latest_data.deaths == vars.covid1[1] or item.latest_data.deaths == vars.covid1[2])]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<ee:transform doc:name="Transform Message" doc:id="e64ce0a7-0c2c-47c9-a647-9ec6566985ed">
