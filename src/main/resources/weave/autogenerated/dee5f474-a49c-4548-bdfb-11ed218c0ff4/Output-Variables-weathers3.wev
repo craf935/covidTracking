@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_dee5f474_a49c_4548_bdfb_11ed218c0ff4_Output_Variables_weathers3 = Any
+
